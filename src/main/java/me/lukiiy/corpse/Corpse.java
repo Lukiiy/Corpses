@@ -177,7 +177,7 @@ public final class Corpse extends JavaPlugin implements Listener {
 
     @EventHandler
     public void rightClick(PlayerInteractEntityEvent e) {
-        if (!(e.getRightClicked() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || !getConfig().getString("itemTreatment", "").equalsIgnoreCase("loot")) return;
+        if (!(e.getRightClicked() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || !getConfig().getString("itemTreatment", "").equalsIgnoreCase("pop")) return;
 
         Inventory npcInv = MannequinInventoryManager.get(npc);
         if (npcInv == null || npcInv.isEmpty()) return;
