@@ -1,0 +1,7 @@
+name: Corpse
+version: '1.0-SNAPSHOT'
+main: me.lukiiy.corpse.Corpse
+api-version: '1.21'
+authors: [ Lukiiy ]
+description: Displays corpses of those who perished
+folia-supported: true

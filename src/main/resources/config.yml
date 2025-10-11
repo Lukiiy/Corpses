@@ -1,0 +1,19 @@
+# You can use "%p" to use the player's display name, works both in 'displayName' and 'label'. Formatted with MiniMessage (https://docs.papermc.io/adventure/minimessage/format/)
+label: ""
+
+# Can be "swimming", "sleeping", "crouching" or "fall_falling"
+pose: "swimming"
+
+# Defines if it can take damage
+invulnerable: false
+
+# Can be "default" (Vanilla behavior), "keep" (Keeps the items until the corpse disappears or dies) or "pop" (Pops the items once a player right clicks it)
+itemTreatment: "default"
+
+gravity: true
+immovable: false
+health: 5
+keepVelocity: true
+
+# Max duration of this existing. In seconds.
+lifespan: 300
