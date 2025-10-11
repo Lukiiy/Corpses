@@ -36,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Corpse extends JavaPlugin implements Listener {
     private final Set<Mannequin> tracked = ConcurrentHashMap.newKeySet();
     public static NamespacedKey KEY;
+    private int lifespan;
 
     @Override
     public void onEnable() {
@@ -44,6 +45,8 @@ public final class Corpse extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
 
         getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> {
+            if (lifespan < 1) return;
+
             tracked.forEach(npc -> {
                 String data = npc.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
                 if (data == null || !data.contains(";")) return;
@@ -75,32 +78,33 @@ public final class Corpse extends JavaPlugin implements Listener {
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
         saveConfig();
+
+        lifespan = getConfig().getInt("lifespan", 300);
     }
 
     private String doPlaceholders(String thing, Player player) {
         return thing.replace("%p", MiniMessage.miniMessage().serialize(player.displayName()));
     }
 
-    // Listener
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void death(PlayerDeathEvent e) {
-        Player player = e.getEntity();
-        PlayerInventory inv = player.getInventory();
-        Location location = player.getLocation();
+    public void makeCorpse(Player p) {
+        PlayerInventory inv = p.getInventory();
+        Location location = p.getLocation();
 
         if (location.getWorld() == null) return;
 
-        Mannequin mannequin = location.getWorld().spawn(location, Mannequin.class, entity -> {
-            entity.setProfile(ResolvableProfile.resolvableProfile(player.getPlayerProfile()));
-            entity.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, location.getWorld().getGameTime() + ";" + getConfig().getInt("lifespan", 300) * 20);
+        location.getWorld().spawn(location, Mannequin.class, entity -> {
+            entity.setProfile(ResolvableProfile.resolvableProfile(p.getPlayerProfile()));
+            entity.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, location.getWorld().getGameTime() + ";" + lifespan * 20);
             entity.setGravity(getConfig().getBoolean("gravity"));
             entity.setInvulnerable(getConfig().getBoolean("invulnerable"));
             entity.setImmovable(getConfig().getBoolean("immovable"));
-            if (getConfig().getBoolean("keepVelocity")) entity.setVelocity(player.getVelocity());
+            entity.setMainHand(p.getMainHand());
+
+            if (getConfig().getBoolean("keepVelocity")) entity.setVelocity(p.getVelocity());
 
             switch (getConfig().getString("pose")) {
                 case "fall_falling" -> entity.setPose(Pose.FALL_FLYING);
-                case "crouching" -> entity.setPose(Pose.SNEAKING);
+                case "crouching", "sneaking" -> entity.setPose(Pose.SNEAKING);
                 case "sleeping" -> entity.setPose(Pose.SLEEPING);
                 case null, default -> entity.setPose(Pose.SWIMMING);
             }
@@ -115,8 +119,6 @@ public final class Corpse extends JavaPlugin implements Listener {
 
             String itemMode = getConfig().getString("itemTreatment", "default");
             if (!inv.isEmpty() && !itemMode.equalsIgnoreCase("default")) {
-                e.getDrops().clear();
-
                 EntityEquipment equip = entity.getEquipment();
 
                 equip.setHelmet(inv.getHelmet(), false);
@@ -131,14 +133,21 @@ public final class Corpse extends JavaPlugin implements Listener {
                 inventory.setContents(Arrays.stream(inv.getContents()).filter(Objects::nonNull).toArray(ItemStack[]::new));
                 MannequinInventoryManager.set(entity, inventory);
             }
+
+            String label = getConfig().getString("label", "");
+            entity.setDescription(label.isBlank() ? Component.empty() : MiniMessage.miniMessage().deserialize(doPlaceholders(label, p)));
+            entity.setCustomNameVisible(!label.isBlank());
         });
+    }
 
-        mannequin.setProfile(ResolvableProfile.resolvableProfile(player.getPlayerProfile()));
-        mannequin.setMainHand(player.getMainHand());
+    // Listener
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void death(PlayerDeathEvent e) {
+        if (!getConfig().getString("itemTreatment", "default").equalsIgnoreCase("default")) {
+            e.getDrops().clear();
+        }
 
-        String label = getConfig().getString("label", "");
-        mannequin.setDescription(label.isBlank() ? Component.empty() : MiniMessage.miniMessage().deserialize(doPlaceholders(label, player)));
-        mannequin.setCustomNameVisible(!label.isBlank());
+        makeCorpse(e.getEntity());
     }
 
     private void popInventory(Mannequin mannequin) {

@@ -15,5 +15,5 @@ immovable: false
 health: 5
 keepVelocity: true
 
-# Max duration of this existing. In seconds.
+# In seconds.
 lifespan: 300
