@@ -1,5 +1,5 @@
 name: Corpse
-version: '1.0-SNAPSHOT'
+version: ${version}
 main: me.lukiiy.corpse.Corpse
 api-version: '1.21'
 authors: [ Lukiiy ]

@@ -21,6 +21,7 @@ import org.bukkit.entity.Pose;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -132,8 +133,7 @@ public final class Corpse extends JavaPlugin implements Listener {
         if (skin.isEmpty()) return ResolvableProfile.resolvableProfile(p.getPlayerProfile());
 
         try {
-            UUID uuid = UUID.fromString(skin);
-            return ResolvableProfile.resolvableProfile(getServer().createProfile(uuid));
+            return ResolvableProfile.resolvableProfile(getServer().createProfile(UUID.fromString(skin)));
         } catch (IllegalArgumentException ex) {
             if (skin.length() > 16) {
                 PlayerProfile profile = getServer().createProfile(UUID.randomUUID());
@@ -144,6 +144,27 @@ public final class Corpse extends JavaPlugin implements Listener {
                 return ResolvableProfile.resolvableProfile(getServer().createProfile(skin));
             }
         }
+    }
+
+    public void popCorpseData(Mannequin mannequin) {
+        Inventory npcInv = MannequinInventoryManager.get(mannequin);
+        if (npcInv == null || npcInv.isEmpty()) return;
+
+        Location loc = mannequin.getLocation();
+        if (loc.getWorld() == null) return;
+
+        Location spawn = loc.add(0, .3, 0);
+        for (ItemStack item : npcInv.getContents()) {
+            if (item == null) continue;
+
+            loc.getWorld().dropItemNaturally(spawn, item);
+        }
+
+        int xp = mannequin.getPersistentDataContainer().getOrDefault(xpKey, PersistentDataType.INTEGER, 0);
+        if (xp > 0) loc.getWorld().spawn(spawn, ExperienceOrb.class, orb -> orb.setExperience(xp));
+
+        mannequin.getEquipment().clear();
+        npcInv.clear();
     }
 
     // Listener
@@ -179,25 +200,10 @@ public final class Corpse extends JavaPlugin implements Listener {
         }
     }
 
-    public void popCorpseData(Mannequin mannequin) {
-        Inventory npcInv = MannequinInventoryManager.get(mannequin);
-        if (npcInv == null || npcInv.isEmpty()) return;
-
-        Location loc = mannequin.getLocation();
-        if (loc.getWorld() == null) return;
-
-        Location spawn = loc.add(0, .3, 0);
-        for (ItemStack item : npcInv.getContents()) {
-            if (item == null) continue;
-
-            loc.getWorld().dropItemNaturally(spawn, item);
-        }
-
-        int xp = mannequin.getPersistentDataContainer().getOrDefault(xpKey, PersistentDataType.INTEGER, 0);
-        if (xp > 0) loc.getWorld().spawn(spawn, ExperienceOrb.class, orb -> orb.setExperience(xp));
-
-        mannequin.getEquipment().clear();
-        npcInv.clear();
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void damage(EntityDamageEvent e) {
+        if (!(e.getEntity() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || getConfig().getBoolean("onlyAcceptEntityDamage")) return;
+        if (e.getDamageSource().getCausingEntity() == null) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -207,7 +213,7 @@ public final class Corpse extends JavaPlugin implements Listener {
     }
 
     @EventHandler
-    public void rightClick(PlayerInteractEntityEvent e) {
+    public void interaction(PlayerInteractEntityEvent e) {
         if (!(e.getRightClicked() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || !getConfig().getString("itemTreatment", "").equalsIgnoreCase("pop")) return;
 
         Inventory npcInv = MannequinInventoryManager.get(npc);

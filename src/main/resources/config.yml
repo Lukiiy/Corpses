@@ -21,3 +21,6 @@ lifespan: 300
 
 # The skin to be used. Leave blank to use the player's skin. You can also input a texture or a player's username/uuid.
 skin: ""
+
+# Makes the corpses invulnerable to damage that doesn't come from an entity.
+onlyAcceptEntityDamage: false

@@ -6,10 +6,10 @@
 
     <groupId>me.lukiiy</groupId>
     <artifactId>corpse</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
     <packaging>jar</packaging>
 
-    <name>corpse</name>
+    <name>Corpse</name>
 
     <properties>
         <java.version>21</java.version>
