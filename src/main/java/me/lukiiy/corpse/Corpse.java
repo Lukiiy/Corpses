@@ -32,10 +32,7 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class Corpse extends JavaPlugin implements Listener {
@@ -93,6 +90,7 @@ public final class Corpse extends JavaPlugin implements Listener {
         return thing.replace("%p", MiniMessage.miniMessage().serialize(player.displayName()));
     }
 
+    // API
     public Mannequin makeCorpse(Player p) {
         Location location = p.getLocation();
         if (location.getWorld() == null) return null;
@@ -128,24 +126,6 @@ public final class Corpse extends JavaPlugin implements Listener {
         });
     }
 
-    private ResolvableProfile getSkinProfile(Player p) {
-        String skin = getConfig().getString("skin", "").trim();
-        if (skin.isEmpty()) return ResolvableProfile.resolvableProfile(p.getPlayerProfile());
-
-        try {
-            return ResolvableProfile.resolvableProfile(getServer().createProfile(UUID.fromString(skin)));
-        } catch (IllegalArgumentException ex) {
-            if (skin.length() > 16) {
-                PlayerProfile profile = getServer().createProfile(UUID.randomUUID());
-
-                profile.setProperty(new ProfileProperty("textures", skin));
-                return ResolvableProfile.resolvableProfile(profile);
-            } else {
-                return ResolvableProfile.resolvableProfile(getServer().createProfile(skin));
-            }
-        }
-    }
-
     public void popCorpseData(Mannequin mannequin) {
         Inventory npcInv = MannequinInventoryManager.get(mannequin);
         if (npcInv == null || npcInv.isEmpty()) return;
@@ -165,6 +145,28 @@ public final class Corpse extends JavaPlugin implements Listener {
 
         mannequin.getEquipment().clear();
         npcInv.clear();
+    }
+
+    public Set<Mannequin> getTracked() {
+        return Collections.unmodifiableSet(tracked);
+    }
+
+    private ResolvableProfile getSkinProfile(Player p) {
+        String skin = getConfig().getString("skin", "").trim();
+        if (skin.isEmpty()) return ResolvableProfile.resolvableProfile(p.getPlayerProfile());
+
+        try {
+            return ResolvableProfile.resolvableProfile(getServer().createProfile(UUID.fromString(skin)));
+        } catch (IllegalArgumentException ex) {
+            if (skin.length() > 16) {
+                PlayerProfile profile = getServer().createProfile(UUID.randomUUID());
+
+                profile.setProperty(new ProfileProperty("textures", skin));
+                return ResolvableProfile.resolvableProfile(profile);
+            } else {
+                return ResolvableProfile.resolvableProfile(getServer().createProfile(skin));
+            }
+        }
     }
 
     // Listener
