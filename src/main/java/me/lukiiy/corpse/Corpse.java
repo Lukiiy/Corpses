@@ -2,6 +2,8 @@ package me.lukiiy.corpse;
 
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import me.lukiiy.manneInventory.MannequinInventoryManager;
 import net.kyori.adventure.text.Component;
@@ -31,6 +33,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class Corpse extends JavaPlugin implements Listener {
@@ -93,7 +96,7 @@ public final class Corpse extends JavaPlugin implements Listener {
         if (location.getWorld() == null) return;
 
         location.getWorld().spawn(location, Mannequin.class, entity -> {
-            entity.setProfile(ResolvableProfile.resolvableProfile(p.getPlayerProfile()));
+            entity.setProfile(getSkinProfile(p));
             entity.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, location.getWorld().getGameTime() + ";" + lifespan * 20);
             entity.setGravity(getConfig().getBoolean("gravity"));
             entity.setInvulnerable(getConfig().getBoolean("invulnerable"));
@@ -138,6 +141,25 @@ public final class Corpse extends JavaPlugin implements Listener {
             entity.setDescription(label.isBlank() ? Component.empty() : MiniMessage.miniMessage().deserialize(doPlaceholders(label, p)));
             entity.setCustomNameVisible(!label.isBlank());
         });
+    }
+
+    private ResolvableProfile getSkinProfile(Player p) {
+        String skin = getConfig().getString("skin", "").trim();
+        if (skin.isEmpty()) return ResolvableProfile.resolvableProfile(p.getPlayerProfile());
+
+        try {
+            UUID uuid = UUID.fromString(skin);
+            return ResolvableProfile.resolvableProfile(getServer().createProfile(uuid));
+        } catch (IllegalArgumentException ex) {
+            if (skin.length() > 16) {
+                PlayerProfile profile = getServer().createProfile(UUID.randomUUID());
+
+                profile.setProperty(new ProfileProperty("textures", skin));
+                return ResolvableProfile.resolvableProfile(profile);
+            } else {
+                return ResolvableProfile.resolvableProfile(getServer().createProfile(skin));
+            }
+        }
     }
 
     // Listener
