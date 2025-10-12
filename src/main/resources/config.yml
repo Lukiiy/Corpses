@@ -9,6 +9,7 @@ invulnerable: false
 
 # Can be "default" (Vanilla behavior), "keep" (Keeps the items until the corpse disappears or dies) or "pop" (Pops the items once a player right clicks it)
 itemTreatment: "default"
+xpTreatment: "default"
 
 gravity: true
 immovable: false

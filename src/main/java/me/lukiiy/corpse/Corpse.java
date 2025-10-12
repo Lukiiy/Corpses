@@ -14,6 +14,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
@@ -39,12 +40,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Corpse extends JavaPlugin implements Listener {
     private final Set<Mannequin> tracked = ConcurrentHashMap.newKeySet();
     public static NamespacedKey KEY;
+    private NamespacedKey xpKey;
     private int lifespan;
 
     @Override
     public void onEnable() {
         setupConfig();
         KEY = new NamespacedKey(this, "corpse");
+        xpKey = new NamespacedKey(this, "xp");
         getServer().getPluginManager().registerEvents(this, this);
 
         getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> {
@@ -59,7 +62,7 @@ public final class Corpse extends JavaPlugin implements Listener {
 
                 try {
                     if (!npc.isDead() && npc.getWorld().getGameTime() - Long.parseLong(parts[0]) >= Long.parseLong(parts[1])) {
-                        popInventory(npc);
+                        popCorpseData(npc);
                         npc.remove();
                     }
                 } catch (NumberFormatException ignored) {}
@@ -89,13 +92,11 @@ public final class Corpse extends JavaPlugin implements Listener {
         return thing.replace("%p", MiniMessage.miniMessage().serialize(player.displayName()));
     }
 
-    public void makeCorpse(Player p) {
-        PlayerInventory inv = p.getInventory();
+    public Mannequin makeCorpse(Player p) {
         Location location = p.getLocation();
+        if (location.getWorld() == null) return null;
 
-        if (location.getWorld() == null) return;
-
-        location.getWorld().spawn(location, Mannequin.class, entity -> {
+        return location.getWorld().spawn(location, Mannequin.class, entity -> {
             entity.setProfile(getSkinProfile(p));
             entity.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, location.getWorld().getGameTime() + ";" + lifespan * 20);
             entity.setGravity(getConfig().getBoolean("gravity"));
@@ -118,23 +119,6 @@ public final class Corpse extends JavaPlugin implements Listener {
                 if (hpInst != null) hpInst.setBaseValue(hp);
 
                 entity.setHealth(hp);
-            }
-
-            String itemMode = getConfig().getString("itemTreatment", "default");
-            if (!inv.isEmpty() && !itemMode.equalsIgnoreCase("default")) {
-                EntityEquipment equip = entity.getEquipment();
-
-                equip.setHelmet(inv.getHelmet(), false);
-                equip.setChestplate(inv.getChestplate(), false);
-                equip.setLeggings(inv.getLeggings(), false);
-                equip.setBoots(inv.getBoots(), false);
-                equip.setItemInOffHand(inv.getItemInMainHand(), false);
-                equip.setItemInOffHand(inv.getItemInOffHand(), false);
-
-                Inventory inventory = Bukkit.createInventory(null, 54);
-
-                inventory.setContents(Arrays.stream(inv.getContents()).filter(Objects::nonNull).toArray(ItemStack[]::new));
-                MannequinInventoryManager.set(entity, inventory);
             }
 
             String label = getConfig().getString("label", "");
@@ -165,14 +149,37 @@ public final class Corpse extends JavaPlugin implements Listener {
     // Listener
     @EventHandler(priority = EventPriority.MONITOR)
     public void death(PlayerDeathEvent e) {
+        Player p = e.getEntity();
+        Mannequin npc = makeCorpse(e.getEntity());
+        if (npc == null) return;
+
         if (!getConfig().getString("itemTreatment", "default").equalsIgnoreCase("default")) {
             e.getDrops().clear();
+
+            PlayerInventory inv = p.getInventory();
+            EntityEquipment equip = npc.getEquipment();
+
+            equip.setHelmet(inv.getHelmet(), false);
+            equip.setChestplate(inv.getChestplate(), false);
+            equip.setLeggings(inv.getLeggings(), false);
+            equip.setBoots(inv.getBoots(), false);
+            equip.setItemInOffHand(inv.getItemInMainHand(), false);
+            equip.setItemInOffHand(inv.getItemInOffHand(), false);
+
+            Inventory inventory = Bukkit.createInventory(null, 54);
+            inventory.setContents(Arrays.stream(inv.getContents()).filter(Objects::nonNull).toArray(ItemStack[]::new));
+
+            MannequinInventoryManager.set(npc, inventory);
         }
 
-        makeCorpse(e.getEntity());
+        if (!getConfig().getString("xpTreatment", "default").equalsIgnoreCase("default")) {
+            e.setShouldDropExperience(false);
+
+            npc.getPersistentDataContainer().set(xpKey, PersistentDataType.INTEGER, e.getDroppedExp());
+        }
     }
 
-    private void popInventory(Mannequin mannequin) {
+    public void popCorpseData(Mannequin mannequin) {
         Inventory npcInv = MannequinInventoryManager.get(mannequin);
         if (npcInv == null || npcInv.isEmpty()) return;
 
@@ -180,12 +187,14 @@ public final class Corpse extends JavaPlugin implements Listener {
         if (loc.getWorld() == null) return;
 
         Location spawn = loc.add(0, .3, 0);
-
         for (ItemStack item : npcInv.getContents()) {
             if (item == null) continue;
 
             loc.getWorld().dropItemNaturally(spawn, item);
         }
+
+        int xp = mannequin.getPersistentDataContainer().getOrDefault(xpKey, PersistentDataType.INTEGER, 0);
+        if (xp > 0) loc.getWorld().spawn(spawn, ExperienceOrb.class, orb -> orb.setExperience(xp));
 
         mannequin.getEquipment().clear();
         npcInv.clear();
@@ -194,7 +203,7 @@ public final class Corpse extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void npcDeath(EntityDeathEvent e) {
         if (!(e.getEntity() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY)) return;
-        popInventory(npc);
+        popCorpseData(npc);
     }
 
     @EventHandler
@@ -206,7 +215,7 @@ public final class Corpse extends JavaPlugin implements Listener {
 
         Player p = e.getPlayer();
 
-        popInventory(npc);
+        popCorpseData(npc);
         p.playSound(npc.getLocation(), Sound.BLOCK_CHEST_OPEN, 1, 1);
     }
 
