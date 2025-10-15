@@ -1,5 +1,8 @@
 # You can use "%p" to use the player's display name, works both in 'displayName' and 'label'. Formatted with MiniMessage (https://docs.papermc.io/adventure/minimessage/format/)
+name: ""
 label: ""
+
+nameAlwaysVisible: true
 
 # Can be "swimming", "sleeping", "crouching" or "fall_falling"
 pose: "swimming"

@@ -120,9 +120,12 @@ public final class Corpse extends JavaPlugin implements Listener {
                 entity.setHealth(hp);
             }
 
+            String name = getConfig().getString("name", "");
             String label = getConfig().getString("label", "");
-            entity.setDescription(label.isBlank() ? Component.empty() : MiniMessage.miniMessage().deserialize(doPlaceholders(label, p)));
-            entity.setCustomNameVisible(!label.isBlank());
+
+            entity.customName(name.isBlank() ? null : MiniMessage.miniMessage().deserialize(doPlaceholders(name, p)));
+            entity.setDescription(label.isBlank() ? null : MiniMessage.miniMessage().deserialize(doPlaceholders(label, p)));
+            entity.setCustomNameVisible(getConfig().getBoolean("nameAlwaysVisible"));
         });
     }
 
