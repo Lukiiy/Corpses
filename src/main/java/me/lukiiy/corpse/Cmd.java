@@ -10,6 +10,7 @@ public class Cmd implements BasicCommand {
     @Override
     public void execute(CommandSourceStack commandSourceStack, String[] strings) {
         Corpse.getInstance().reloadConfig();
+
         commandSourceStack.getSender().sendMessage(Component.text("Corpse Reload complete!").color(NamedTextColor.GREEN));
     }
 
