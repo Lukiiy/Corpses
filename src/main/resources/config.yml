@@ -27,3 +27,6 @@ skin: ""
 
 # Makes the corpses invulnerable to damage that doesn't come from an entity.
 onlyAcceptEntityDamage: false
+
+# Arm animation when spawning
+armAnimation: true
