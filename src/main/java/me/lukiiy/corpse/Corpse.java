@@ -42,9 +42,10 @@ public final class Corpse extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        setupConfig();
         KEY = new NamespacedKey(this, "corpse");
         xpKey = new NamespacedKey(this, "xp");
+
+        setupConfig();
         getServer().getPluginManager().registerEvents(this, this);
 
         getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> {
@@ -105,7 +106,7 @@ public final class Corpse extends JavaPlugin implements Listener {
             if (getConfig().getBoolean("keepVelocity")) entity.setVelocity(p.getVelocity());
 
             switch (getConfig().getString("pose")) {
-                case "fall_falling" -> entity.setPose(Pose.FALL_FLYING);
+                case "fall_falling", "fall falling" -> entity.setPose(Pose.FALL_FLYING);
                 case "crouching", "sneaking" -> entity.setPose(Pose.SNEAKING);
                 case "sleeping" -> entity.setPose(Pose.SLEEPING);
                 case null, default -> entity.setPose(Pose.SWIMMING);
