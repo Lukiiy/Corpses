@@ -36,8 +36,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class Corpse extends JavaPlugin implements Listener {
     private final Set<Mannequin> tracked = ConcurrentHashMap.newKeySet();
+
     public static NamespacedKey KEY;
     private NamespacedKey xpKey;
+
     private int lifespan;
 
     @Override
@@ -59,7 +61,7 @@ public final class Corpse extends JavaPlugin implements Listener {
                 if (parts.length < 2) return;
 
                 try {
-                    if (!npc.isDead() && npc.getWorld().getGameTime() - Long.parseLong(parts[0]) >= Long.parseLong(parts[1])) {
+                    if (npc.getWorld().getGameTime() - Long.parseLong(parts[0]) >= Long.parseLong(parts[1])) {
                         popCorpseData(npc);
                         npc.remove();
                     }
@@ -69,9 +71,6 @@ public final class Corpse extends JavaPlugin implements Listener {
 
         registerCommand("corpse", new Cmd());
     }
-
-    @Override
-    public void onDisable() {}
 
     public static Corpse getInstance() {
         return JavaPlugin.getPlugin(Corpse.class);
@@ -167,6 +166,7 @@ public final class Corpse extends JavaPlugin implements Listener {
                 PlayerProfile profile = getServer().createProfile(UUID.randomUUID());
 
                 profile.setProperty(new ProfileProperty("textures", skin));
+
                 return ResolvableProfile.resolvableProfile(profile);
             } else {
                 return ResolvableProfile.resolvableProfile(getServer().createProfile(skin));
@@ -210,12 +210,14 @@ public final class Corpse extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void damage(EntityDamageEvent e) {
         if (!(e.getEntity() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || getConfig().getBoolean("onlyAcceptEntityDamage")) return;
+
         if (e.getDamageSource().getCausingEntity() == null) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void npcDeath(EntityDeathEvent e) {
         if (!(e.getEntity() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY)) return;
+
         popCorpseData(npc);
     }
 
@@ -235,12 +237,14 @@ public final class Corpse extends JavaPlugin implements Listener {
     @EventHandler
     public void worldEntityAdd(EntityAddToWorldEvent e) {
         if (!(e.getEntity() instanceof Mannequin npc)) return;
+
         if (npc.getPersistentDataContainer().has(KEY, PersistentDataType.STRING)) tracked.add(npc);
     }
 
     @EventHandler
     public void worldEntityRemove(EntityRemoveFromWorldEvent e) {
         if (!(e.getEntity() instanceof Mannequin npc)) return;
+
         if (npc.getPersistentDataContainer().has(KEY, PersistentDataType.STRING)) tracked.remove(npc);
     }
 }
