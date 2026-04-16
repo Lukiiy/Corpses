@@ -30,3 +30,6 @@ onlyAcceptEntityDamage: false
 
 # Arm animation when spawning
 armAnimation: true
+
+# Pushes corpses upwards when they're in water/lava
+floatOnLiquids: true

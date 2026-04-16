@@ -5,6 +5,7 @@ import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
+import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import me.lukiiy.manneInventory.MannequinInventoryManager;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -30,6 +31,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,6 +56,8 @@ public final class Corpse extends JavaPlugin implements Listener {
             if (lifespan < 1) return;
 
             tracked.forEach(npc -> {
+                if (npc == null || npc.isDead()) return;
+
                 String data = npc.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
                 if (data == null || !data.contains(";")) return;
 
@@ -124,9 +128,20 @@ public final class Corpse extends JavaPlugin implements Listener {
 
             entity.customName(name.isBlank() ? null : MiniMessage.miniMessage().deserialize(doPlaceholders(name, p)));
             entity.setDescription(label.isBlank() ? null : MiniMessage.miniMessage().deserialize(doPlaceholders(label, p)));
-            entity.setCustomNameVisible(getConfig().getBoolean("nameAlwaysVisible"));
+            entity.setCustomNameVisible(getConfig().getBoolean("nameAlwaysVisible") && !name.isBlank());
 
-            if (getConfig().getBoolean("armAnimation")) entity.getScheduler().run(this, (task) -> entity.swingMainHand(), null);
+            EntityScheduler scheduler = entity.getScheduler();
+
+            if (getConfig().getBoolean("armAnimation")) scheduler.execute(this, entity::swingMainHand, null, 2L);
+            if (getConfig().getBoolean("floatOnLiquids")) scheduler.runAtFixedRate(this, (task) -> {
+                if (entity.isInWater() || entity.isInLava()) {
+                    Vector vector = entity.getVelocity();
+
+                    vector.setY(.1);
+
+                    entity.setVelocity(vector);
+                }
+            }, null, 1L, 2L);
         });
     }
 
