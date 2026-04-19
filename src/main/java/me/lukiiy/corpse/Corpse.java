@@ -7,6 +7,7 @@ import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import me.lukiiy.manneInventory.MannequinInventoryManager;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -51,27 +52,6 @@ public final class Corpse extends JavaPlugin implements Listener {
 
         setupConfig();
         getServer().getPluginManager().registerEvents(this, this);
-
-        getServer().getGlobalRegionScheduler().runAtFixedRate(this, task -> {
-            if (lifespan < 1) return;
-
-            tracked.forEach(npc -> {
-                if (npc == null || npc.isDead()) return;
-
-                String data = npc.getPersistentDataContainer().get(KEY, PersistentDataType.STRING);
-                if (data == null || !data.contains(";")) return;
-
-                String[] parts = data.split(";");
-                if (parts.length < 2) return;
-
-                try {
-                    if (npc.getWorld().getGameTime() - Long.parseLong(parts[0]) >= Long.parseLong(parts[1])) {
-                        popCorpseData(npc);
-                        npc.remove();
-                    }
-                } catch (NumberFormatException ignored) {}
-            });
-        }, 20L, 100L);
 
         registerCommand("corpse", new Cmd());
     }
@@ -253,7 +233,24 @@ public final class Corpse extends JavaPlugin implements Listener {
     public void worldEntityAdd(EntityAddToWorldEvent e) {
         if (!(e.getEntity() instanceof Mannequin npc)) return;
 
-        if (npc.getPersistentDataContainer().has(KEY, PersistentDataType.STRING)) tracked.add(npc);
+        if (npc.getPersistentDataContainer().has(KEY, PersistentDataType.STRING)) {
+            if (tracked.contains(npc)) return;
+
+            tracked.add(npc);
+
+            if (lifespan < 1) return;
+
+            npc.getScheduler().runDelayed(this, task -> {
+                if (!npc.isValid() || npc.isDead()) {
+                    tracked.remove(npc);
+                    return;
+                }
+
+                popCorpseData(npc);
+                tracked.remove(npc);
+                npc.remove();
+            }, null, lifespan * 20L);
+        }
     }
 
     @EventHandler
