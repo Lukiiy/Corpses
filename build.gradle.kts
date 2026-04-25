@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.9-R0.1-SNAPSHOT")
-    implementation(files("lib/ManneInventory-1.0-SNAPSHOT.jar"))
+    implementation(files("lib/ManneInventory-1.1.jar"))
 }
 
 tasks {
