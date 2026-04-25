@@ -10,7 +10,7 @@ pose: "swimming"
 # Defines if it can take damage
 invulnerable: false
 
-# Can be "default" (Vanilla behavior), "keep" (Keeps the items until the corpse disappears or dies) or "pop" (Pops the items once a player right clicks it)
+# Can be "default" (Vanilla behavior), "keep" (Keeps the items until the corpse disappears or dies) or "pop" (Pops the items once a player right clicks it); xpTreatment set to pop needs itemTreatment to also be "pop"
 itemTreatment: "default"
 xpTreatment: "default"
 
