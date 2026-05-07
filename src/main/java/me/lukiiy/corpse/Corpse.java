@@ -236,9 +236,10 @@ public final class Corpse extends JavaPlugin implements Listener {
 
         Player p = e.getPlayer();
 
-        popCorpseData(npc);
-        npc.setHealth(0);
         p.playSound(npc.getLocation(), Sound.BLOCK_CHEST_OPEN, 1, 1);
+        popCorpseData(npc);
+
+        npc.getScheduler().run(this, (t) -> npc.setHealth(0), null);
     }
 
     @EventHandler
