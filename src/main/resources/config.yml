@@ -33,3 +33,6 @@ armAnimation: true
 
 # Pushes corpses upwards when they're in water/lava
 floatOnLiquids: false
+
+# Applies the player's scale value to the corpse
+scaleAttribute: true

@@ -85,6 +85,13 @@ public final class Corpse extends JavaPlugin implements Listener {
             entity.setImmovable(getConfig().getBoolean("immovable"));
             entity.setMainHand(p.getMainHand());
 
+            if (getConfig().getBoolean("scaleAttribute")) {
+                AttributeInstance pScale = p.getAttribute(Attribute.SCALE);
+                AttributeInstance scale = entity.getAttribute(Attribute.SCALE);
+
+                if (pScale != null && scale != null) scale.setBaseValue(pScale.getValue());
+            }
+
             if (getConfig().getBoolean("keepVelocity")) entity.setVelocity(p.getVelocity());
 
             switch (getConfig().getString("pose")) {
