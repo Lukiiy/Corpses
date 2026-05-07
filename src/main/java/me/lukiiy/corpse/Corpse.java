@@ -192,7 +192,7 @@ public final class Corpse extends JavaPlugin implements Listener {
             equip.setChestplate(inv.getChestplate(), false);
             equip.setLeggings(inv.getLeggings(), false);
             equip.setBoots(inv.getBoots(), false);
-            equip.setItemInOffHand(inv.getItemInMainHand(), false);
+            equip.setItemInMainHand(inv.getItemInMainHand(), false);
             equip.setItemInOffHand(inv.getItemInOffHand(), false);
 
             Inventory inventory = Bukkit.createInventory(null, 54);
