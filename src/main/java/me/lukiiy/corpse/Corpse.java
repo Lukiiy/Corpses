@@ -133,23 +133,28 @@ public final class Corpse extends JavaPlugin implements Listener {
 
     public void popCorpseData(Mannequin mannequin) {
         Inventory npcInv = MannequinInventoryManager.get(mannequin);
-        if (npcInv == null || npcInv.isEmpty()) return;
-
         Location loc = mannequin.getLocation();
         if (loc.getWorld() == null) return;
 
         Location spawn = loc.add(0, .3, 0);
-        for (ItemStack item : npcInv.getContents()) {
-            if (item == null) continue;
 
-            loc.getWorld().dropItemNaturally(spawn, item);
+        if (npcInv != null && !npcInv.isEmpty()) {
+            for (ItemStack item : npcInv.getContents()) {
+                if (item == null) continue;
+
+                loc.getWorld().dropItemNaturally(spawn, item);
+            }
+
+            mannequin.getEquipment().clear();
+            npcInv.clear();
         }
 
         int xp = mannequin.getPersistentDataContainer().getOrDefault(xpKey, PersistentDataType.INTEGER, 0);
-        if (xp > 0) loc.getWorld().spawn(spawn, ExperienceOrb.class, orb -> orb.setExperience(xp));
+        if (xp > 0) {
+            loc.getWorld().spawn(spawn, ExperienceOrb.class, orb -> orb.setExperience(xp)); // one big xp orb
 
-        mannequin.getEquipment().clear();
-        npcInv.clear();
+            mannequin.getPersistentDataContainer().remove(xpKey);
+        }
     }
 
     public Set<Mannequin> getTracked() {
