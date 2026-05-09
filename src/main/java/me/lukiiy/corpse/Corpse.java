@@ -184,6 +184,8 @@ public final class Corpse extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void death(PlayerDeathEvent e) {
         Player p = e.getEntity();
+        if (p.getGameMode().isInvulnerable()) return;
+
         Mannequin npc = makeCorpse(e.getEntity());
         if (npc == null) return;
 
