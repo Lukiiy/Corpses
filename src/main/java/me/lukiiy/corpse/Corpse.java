@@ -39,15 +39,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class Corpse extends JavaPlugin implements Listener {
     private final Set<Mannequin> tracked = ConcurrentHashMap.newKeySet();
 
-    public static NamespacedKey KEY;
-    private NamespacedKey xpKey;
+    private static NamespacedKey KEY;
+    private static NamespacedKey XP_KEY;
 
     private int lifespan;
 
     @Override
     public void onEnable() {
         KEY = new NamespacedKey(this, "corpse");
-        xpKey = new NamespacedKey(this, "xp");
+        XP_KEY = new NamespacedKey(this, "xp");
 
         setupConfig();
         getServer().getPluginManager().registerEvents(this, this);
@@ -57,6 +57,14 @@ public final class Corpse extends JavaPlugin implements Listener {
 
     public static Corpse getInstance() {
         return JavaPlugin.getPlugin(Corpse.class);
+    }
+
+    public static NamespacedKey getKEY() {
+        return KEY;
+    }
+
+    public NamespacedKey getXpKey() {
+        return XP_KEY;
     }
 
     // Config
@@ -149,11 +157,11 @@ public final class Corpse extends JavaPlugin implements Listener {
             npcInv.clear();
         }
 
-        int xp = mannequin.getPersistentDataContainer().getOrDefault(xpKey, PersistentDataType.INTEGER, 0);
+        int xp = mannequin.getPersistentDataContainer().getOrDefault(XP_KEY, PersistentDataType.INTEGER, 0);
         if (xp > 0) {
             loc.getWorld().spawn(spawn, ExperienceOrb.class, orb -> orb.setExperience(xp)); // one big xp orb
 
-            mannequin.getPersistentDataContainer().remove(xpKey);
+            mannequin.getPersistentDataContainer().remove(XP_KEY);
         }
     }
 
@@ -213,7 +221,7 @@ public final class Corpse extends JavaPlugin implements Listener {
         if (!getConfig().getString("xpTreatment", "default").equalsIgnoreCase("default")) {
             e.setShouldDropExperience(false);
 
-            npc.getPersistentDataContainer().set(xpKey, PersistentDataType.INTEGER, e.getDroppedExp());
+            npc.getPersistentDataContainer().set(XP_KEY, PersistentDataType.INTEGER, e.getDroppedExp());
         }
     }
 
