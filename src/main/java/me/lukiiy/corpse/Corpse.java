@@ -186,6 +186,8 @@ public final class Corpse extends JavaPlugin implements Listener {
         Player p = e.getEntity();
         if (p.getGameMode().isInvulnerable()) return;
 
+        if (getConfig().getBoolean("ignoreEmptyInventories") && p.getInventory().isEmpty()) return;
+
         Mannequin npc = makeCorpse(e.getEntity());
         if (npc == null) return;
 
