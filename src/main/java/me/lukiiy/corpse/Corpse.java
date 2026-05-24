@@ -251,7 +251,7 @@ public final class Corpse extends JavaPlugin implements Listener {
         if (!(e.getRightClicked() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || !getConfig().getString("itemTreatment", "").equalsIgnoreCase("pop")) return;
 
         Inventory npcInv = MannequinInventoryManager.get(npc);
-        if (npcInv == null || npcInv.isEmpty()) return;
+        if (npcInv == null || (npcInv.isEmpty() && !npc.getPersistentDataContainer().has(XP_KEY, PersistentDataType.INTEGER))) return;
 
         Player p = e.getPlayer();
 
