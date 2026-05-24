@@ -43,6 +43,8 @@ public final class Corpse extends JavaPlugin implements Listener {
     private static NamespacedKey XP_KEY;
 
     private int lifespan;
+    private boolean storeItems;
+    private boolean storeXp;
 
     @Override
     public void onEnable() {
@@ -50,8 +52,9 @@ public final class Corpse extends JavaPlugin implements Listener {
         XP_KEY = new NamespacedKey(this, "xp");
 
         setupConfig();
-        getServer().getPluginManager().registerEvents(this, this);
+        updateCommons();
 
+        getServer().getPluginManager().registerEvents(this, this);
         registerCommand("corpse", new Cmd());
     }
 
@@ -72,8 +75,12 @@ public final class Corpse extends JavaPlugin implements Listener {
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
         saveConfig();
+    }
 
+    public void updateCommons() {
         lifespan = getConfig().getInt("lifespan", 300);
+        storeItems = !getConfig().getString("itemTreatment", "default").equalsIgnoreCase("default");
+        storeXp = !getConfig().getString("xpTreatment", "default").equalsIgnoreCase("default");
     }
 
     private String doPlaceholders(String thing, Player player) {
@@ -194,12 +201,12 @@ public final class Corpse extends JavaPlugin implements Listener {
         Player p = e.getEntity();
         if (p.getGameMode().isInvulnerable()) return;
 
-        if (getConfig().getBoolean("ignoreEmptyInventories") && p.getInventory().isEmpty()) return;
+        if (getConfig().getBoolean("ignoreEmptyInventories") && p.getInventory().isEmpty() && e.getDroppedExp() == 0) return;
 
         Mannequin npc = makeCorpse(e.getEntity());
         if (npc == null) return;
 
-        if (!getConfig().getString("itemTreatment", "default").equalsIgnoreCase("default")) {
+        if (storeItems) {
             e.getDrops().clear();
 
             PlayerInventory inv = p.getInventory();
@@ -218,7 +225,7 @@ public final class Corpse extends JavaPlugin implements Listener {
             MannequinInventoryManager.set(npc, inventory);
         }
 
-        if (!getConfig().getString("xpTreatment", "default").equalsIgnoreCase("default")) {
+        if (storeXp) {
             e.setShouldDropExperience(false);
 
             npc.getPersistentDataContainer().set(XP_KEY, PersistentDataType.INTEGER, e.getDroppedExp());
