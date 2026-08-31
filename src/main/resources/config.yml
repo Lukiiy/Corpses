@@ -37,3 +37,13 @@ floatOnLiquids: false
 
 # Applies the player's scale value to the corpse
 scaleAttribute: true
+
+# Defines which skin parts the corpse is allowed to use
+skinParts:
+  cape: true
+  jacket: true
+  leftSleeve: true
+  rightSleeve: true
+  leftPants: true
+  rightPants: true
+  hat: true
