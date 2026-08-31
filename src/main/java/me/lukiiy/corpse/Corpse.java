@@ -1,5 +1,6 @@
 package me.lukiiy.corpse;
 
+import com.destroystokyo.paper.SkinParts;
 import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import com.destroystokyo.paper.profile.PlayerProfile;
@@ -14,6 +15,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
@@ -45,6 +47,7 @@ public final class Corpse extends JavaPlugin implements Listener {
     private int lifespan;
     private boolean storeItems;
     private boolean storeXp;
+    private SkinParts skinParts;
 
     @Override
     public void onEnable() {
@@ -81,6 +84,22 @@ public final class Corpse extends JavaPlugin implements Listener {
         lifespan = getConfig().getInt("lifespan", 300);
         storeItems = !getConfig().getString("itemTreatment", "default").equalsIgnoreCase("default");
         storeXp = !getConfig().getString("xpTreatment", "default").equalsIgnoreCase("default");
+
+        // skinParts
+        ConfigurationSection partsSec = getConfig().getConfigurationSection("skinParts");
+        SkinParts.Mutable parts = SkinParts.allParts();
+
+        if (partsSec != null) {
+            parts.setCapeEnabled(partsSec.getBoolean("cape", true));
+            parts.setJacketEnabled(partsSec.getBoolean("jacket", true));
+            parts.setLeftSleeveEnabled(partsSec.getBoolean("leftSleeve", true));
+            parts.setRightSleeveEnabled(partsSec.getBoolean("rightSleeve", true));
+            parts.setLeftPantsEnabled(partsSec.getBoolean("leftPants", true));
+            parts.setRightPantsEnabled(partsSec.getBoolean("rightPants", true));
+            parts.setHatsEnabled(partsSec.getBoolean("hat", true));
+        }
+
+        skinParts = parts.immutableCopy();
     }
 
     private String doPlaceholders(String thing, Player player) {
@@ -99,6 +118,7 @@ public final class Corpse extends JavaPlugin implements Listener {
             entity.setInvulnerable(getConfig().getBoolean("invulnerable"));
             entity.setImmovable(getConfig().getBoolean("immovable"));
             entity.setMainHand(p.getMainHand());
+            entity.setSkinParts(skinParts);
 
             if (getConfig().getBoolean("scaleAttribute")) {
                 AttributeInstance pScale = p.getAttribute(Attribute.SCALE);
