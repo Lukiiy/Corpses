@@ -3,7 +3,7 @@ name: ""
 label: ""
 
 nameAlwaysVisible: true
-ignoreEmptyInventories: true
+ignoreEmptyInventories: false
 
 # Can be "swimming", "sleeping", "crouching" or "fall_falling"
 pose: "swimming"
