@@ -216,11 +216,11 @@ public final class Corpse extends JavaPlugin implements Listener {
     }
 
     // Listener
-    @EventHandler()
+    @EventHandler
     public void death(PlayerDeathEvent e) {
         Player p = e.getEntity();
-        if (p.getGameMode().isInvulnerable()) return;
 
+        if ((p.getGameMode().isInvulnerable() || p.isInvulnerable()) && getConfig().getBoolean("ignoreInvulnerability")) return;
         if (getConfig().getBoolean("ignoreEmptyInventories") && p.getInventory().isEmpty() && e.getDroppedExp() == 0) return;
 
         Mannequin npc = makeCorpse(e.getEntity());

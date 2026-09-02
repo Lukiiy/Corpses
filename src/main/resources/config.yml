@@ -4,6 +4,7 @@ label: ""
 
 nameAlwaysVisible: true
 ignoreEmptyInventories: false
+ignoreInvulnerability: false
 
 # Can be "swimming", "sleeping", "crouching" or "fall_falling"
 pose: "swimming"
