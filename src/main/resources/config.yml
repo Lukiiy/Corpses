@@ -39,7 +39,7 @@ floatOnLiquids: false
 # Applies the player's scale value to the corpse
 scaleAttribute: true
 
-# Defines which skin parts the corpse is allowed to use
+# Defines which skin parts the corpse is allowed to use; Do keep in mind that every skin part will be shown to clients when they refresh the entity (chunk load)
 skinParts:
   cape: true
   jacket: true
