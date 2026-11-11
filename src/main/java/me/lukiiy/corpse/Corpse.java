@@ -1,18 +1,14 @@
 package me.lukiiy.corpse;
 
 import com.destroystokyo.paper.SkinParts;
-import com.destroystokyo.paper.event.entity.EntityAddToWorldEvent;
-import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import io.papermc.paper.datacomponent.item.ResolvableProfile;
 import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import me.lukiiy.manneInventory.MannequinInventoryManager;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.ConfigurationSection;
@@ -20,17 +16,8 @@ import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
@@ -38,16 +25,16 @@ import org.bukkit.util.Vector;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public final class Corpse extends JavaPlugin implements Listener {
-    private final Set<Mannequin> tracked = ConcurrentHashMap.newKeySet();
+public final class Corpse extends JavaPlugin {
+    protected final Set<Mannequin> tracked = ConcurrentHashMap.newKeySet();
 
     private static NamespacedKey KEY;
     private static NamespacedKey XP_KEY;
 
-    private int lifespan;
-    private boolean storeItems;
-    private boolean storeXp;
-    private SkinParts skinParts;
+    protected int lifespan;
+    protected boolean storeItems;
+    protected boolean storeXp;
+    protected SkinParts skinParts;
 
     @Override
     public void onEnable() {
@@ -57,7 +44,7 @@ public final class Corpse extends JavaPlugin implements Listener {
         setupConfig();
         updateCommons();
 
-        getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new Listen(this), this);
         registerCommand("corpse", new Cmd());
     }
 
@@ -65,11 +52,11 @@ public final class Corpse extends JavaPlugin implements Listener {
         return JavaPlugin.getPlugin(Corpse.class);
     }
 
-    public static NamespacedKey getKEY() {
+    public static NamespacedKey getKey() {
         return KEY;
     }
 
-    public NamespacedKey getXpKey() {
+    public static NamespacedKey getXpKey() {
         return XP_KEY;
     }
 
@@ -213,102 +200,5 @@ public final class Corpse extends JavaPlugin implements Listener {
                 return ResolvableProfile.resolvableProfile(getServer().createProfile(skin));
             }
         }
-    }
-
-    // Listener
-    @EventHandler
-    public void death(PlayerDeathEvent e) {
-        Player p = e.getEntity();
-
-        if ((p.getGameMode().isInvulnerable() || p.isInvulnerable()) && getConfig().getBoolean("ignoreInvulnerability")) return;
-        if (getConfig().getBoolean("ignoreEmptyInventories") && p.getInventory().isEmpty() && e.getDroppedExp() == 0) return;
-
-        Mannequin npc = makeCorpse(e.getEntity());
-        if (npc == null) return;
-
-        if (storeItems) {
-            e.getDrops().clear();
-
-            PlayerInventory inv = p.getInventory();
-            EntityEquipment equip = npc.getEquipment();
-
-            equip.setHelmet(inv.getHelmet(), false);
-            equip.setChestplate(inv.getChestplate(), false);
-            equip.setLeggings(inv.getLeggings(), false);
-            equip.setBoots(inv.getBoots(), false);
-            equip.setItemInMainHand(inv.getItemInMainHand(), false);
-            equip.setItemInOffHand(inv.getItemInOffHand(), false);
-
-            Inventory inventory = Bukkit.createInventory(null, 54);
-            inventory.setContents(Arrays.stream(inv.getContents()).filter(Objects::nonNull).toArray(ItemStack[]::new));
-
-            MannequinInventoryManager.set(npc, inventory);
-        }
-
-        if (storeXp) {
-            e.setShouldDropExperience(false);
-
-            npc.getPersistentDataContainer().set(XP_KEY, PersistentDataType.INTEGER, e.getDroppedExp());
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void damage(EntityDamageEvent e) {
-        if (!(e.getEntity() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || getConfig().getBoolean("onlyAcceptEntityDamage")) return;
-
-        if (e.getDamageSource().getCausingEntity() == null) e.setCancelled(true);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void npcDeath(EntityDeathEvent e) {
-        if (!(e.getEntity() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY)) return;
-
-        popCorpseData(npc);
-    }
-
-    @EventHandler
-    public void interaction(PlayerInteractEntityEvent e) {
-        if (!(e.getRightClicked() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(KEY) || !getConfig().getString("itemTreatment", "").equalsIgnoreCase("pop")) return;
-
-        Inventory npcInv = MannequinInventoryManager.get(npc);
-        if (npcInv == null || (npcInv.isEmpty() && !npc.getPersistentDataContainer().has(XP_KEY, PersistentDataType.INTEGER))) return;
-
-        Player p = e.getPlayer();
-
-        p.playSound(npc.getLocation(), Sound.BLOCK_CHEST_OPEN, 1, 1);
-        popCorpseData(npc);
-
-        npc.getScheduler().run(this, (t) -> npc.setHealth(0), null);
-    }
-
-    @EventHandler
-    public void worldEntityAdd(EntityAddToWorldEvent e) {
-        if (!(e.getEntity() instanceof Mannequin npc)) return;
-
-        if (npc.getPersistentDataContainer().has(KEY, PersistentDataType.STRING)) {
-            if (tracked.contains(npc)) return;
-
-            tracked.add(npc);
-
-            if (lifespan < 1) return;
-
-            npc.getScheduler().runDelayed(this, task -> {
-                if (!npc.isValid() || npc.isDead()) {
-                    tracked.remove(npc);
-                    return;
-                }
-
-                popCorpseData(npc);
-                tracked.remove(npc);
-                npc.remove();
-            }, null, lifespan * 20L);
-        }
-    }
-
-    @EventHandler
-    public void worldEntityRemove(EntityRemoveFromWorldEvent e) {
-        if (!(e.getEntity() instanceof Mannequin npc)) return;
-
-        if (npc.getPersistentDataContainer().has(KEY, PersistentDataType.STRING)) tracked.remove(npc);
     }
 }
