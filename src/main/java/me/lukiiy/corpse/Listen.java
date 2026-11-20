@@ -84,9 +84,6 @@ public class Listen implements Listener {
     public void interaction(PlayerInteractEntityEvent e) {
         if (!(e.getRightClicked() instanceof Mannequin npc) || !npc.getPersistentDataContainer().has(Corpse.getKey()) || !plugin.getConfig().getString("itemTreatment", "").equalsIgnoreCase("pop")) return;
 
-        Inventory npcInv = MannequinInventoryManager.get(npc);
-        if (npcInv == null || (npcInv.isEmpty() && !npc.getPersistentDataContainer().has(Corpse.getXpKey(), PersistentDataType.INTEGER))) return;
-
         Player p = e.getPlayer();
 
         p.playSound(npc.getLocation(), Sound.BLOCK_CHEST_OPEN, 1, 1);
