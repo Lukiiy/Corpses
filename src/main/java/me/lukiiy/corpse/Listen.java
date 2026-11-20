@@ -91,7 +91,7 @@ public class Listen implements Listener {
 
         p.playSound(npc.getLocation(), Sound.BLOCK_CHEST_OPEN, 1, 1);
         plugin.popCorpseData(npc);
-        npc.getScheduler().run(Corpse.getInstance(), (t) -> npc.setHealth(0), null);
+        npc.getScheduler().run(plugin, (t) -> npc.setHealth(0), null);
     }
 
     @EventHandler
@@ -105,7 +105,7 @@ public class Listen implements Listener {
 
             if (plugin.lifespan < 1) return;
 
-            npc.getScheduler().runDelayed(Corpse.getInstance(), task -> {
+            npc.getScheduler().runDelayed(plugin, task -> {
                 if (!npc.isValid() || npc.isDead()) {
                     plugin.tracked.remove(npc);
                     return;
