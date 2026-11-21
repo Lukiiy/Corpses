@@ -64,4 +64,11 @@ public class Cmd implements BasicCommand {
     public @Nullable String permission() {
         return "corpse.cmd";
     }
+
+    @Override
+    public Collection<String> suggest(CommandSourceStack commandSourceStack, String[] args) {
+        if (args.length == 1) return Stream.of("reload", "clear").filter(s -> s.startsWith(args[0].toLowerCase())).toList();
+
+        return List.of();
+    }
 }
