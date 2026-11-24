@@ -48,3 +48,8 @@ skinParts:
   leftPants: true
   rightPants: true
   hat: true
+
+interactSfx:
+  id: block.chest.open
+  pitch: 1.0
+  volume: 1.0

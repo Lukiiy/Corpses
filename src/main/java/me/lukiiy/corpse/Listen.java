@@ -86,7 +86,7 @@ public class Listen implements Listener {
 
         Player p = e.getPlayer();
 
-        p.playSound(npc.getLocation(), Sound.BLOCK_CHEST_OPEN, 1, 1);
+        p.playSound(npc.getLocation(), plugin.getConfig().getString("interactSfx.id", "block.chest.open"), (float) plugin.getConfig().getDouble("interactSfx.volume", 1.0), (float) plugin.getConfig().getDouble("interactSfx.pitch", 1.0));
         plugin.popCorpseData(npc);
         npc.getScheduler().run(plugin, (t) -> npc.setHealth(0), null);
     }
