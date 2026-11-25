@@ -100,7 +100,7 @@ public final class Corpse extends JavaPlugin {
 
         return location.getWorld().spawn(location, Mannequin.class, entity -> {
             entity.setProfile(getSkinProfile(p));
-            entity.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, location.getWorld().getGameTime() + ";" + lifespan * 20 + ";" + p.getUniqueId());
+            entity.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, location.getWorld().getGameTime() + ";" + lifespan + ";" + p.getUniqueId());
             entity.setGravity(getConfig().getBoolean("gravity"));
             entity.setInvulnerable(getConfig().getBoolean("invulnerable"));
             entity.setImmovable(getConfig().getBoolean("immovable"));
