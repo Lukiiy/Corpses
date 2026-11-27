@@ -21,7 +21,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 public class Cmd implements BasicCommand {
-    private static final Component USAGE = Component.text("Usage: /corpse <reload/clear>").color(NamedTextColor.RED);
+    private static final Component USAGE = Component.text("Usage: /corpse <reload/clear/list>").color(NamedTextColor.RED);
 
     @Override
     public void execute(CommandSourceStack commandSourceStack, String[] strings) {
