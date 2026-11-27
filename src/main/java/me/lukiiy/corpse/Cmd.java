@@ -102,7 +102,7 @@ public class Cmd implements BasicCommand {
 
     @Override
     public Collection<String> suggest(CommandSourceStack commandSourceStack, String[] args) {
-        if (args.length == 1) return Stream.of("reload", "clear").filter(s -> s.startsWith(args[0].toLowerCase())).toList();
+        if (args.length == 1) return Stream.of("reload", "clear", "list").filter(s -> s.startsWith(args[0].toLowerCase())).toList();
 
         return List.of();
     }
