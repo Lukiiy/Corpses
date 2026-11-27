@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "me.lukiiy"
-version = "1.4"
+version = "1.4.1"
 description = "Displays corpses of those who perished."
 
 repositories {
